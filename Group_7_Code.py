@@ -1,17 +1,20 @@
-import pickle
+from globals import SIMULATION_START_TIME
+from logger import create_log_file, log
+from storage import get_items_for_storage
+import numpy as np
+from fetch import create_requests
 
-with open('storage_list.p', 'rb') as file:
-  storage_list = pickle.load(file)
+if __name__ == "__main__":
+    create_log_file()  # Create the log file
+    # Get the storage list:
+    storage_list = get_items_for_storage()
 
-print("storage_list")
-print(storage_list)
+    # Start the storage process:
+    # TODO: Create a storage process
 
-
-sum_of_items = sum([x[1] for x in storage_list])
-print(sum_of_items)
-
-with open('prob_list.p', 'rb') as file:
-  prob_list = pickle.load(file)
-
-print("prob_list")
-print(prob_list)
+    np.random.seed(0)  # Seed the random number generator
+    # Create the requests:
+    requests = create_requests()
+    current_time = SIMULATION_START_TIME
+    # Start the fetching process:
+    # TODO: Create a fetching process
