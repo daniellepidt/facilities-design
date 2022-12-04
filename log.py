@@ -4,6 +4,8 @@ generate the logs for the simulation.
 """
 import logging
 from datetime import datetime, timedelta
+from globals import SIMULATION_START_TIME
+
 
 
 def log(seconds_from_start: int, log_data=""):
@@ -19,7 +21,7 @@ def log(seconds_from_start: int, log_data=""):
     print(log_string)
 
 
-def create_log_file(creation_time=0):
+def create_log_file(creation_time=SIMULATION_START_TIME):
     """
     Create a log file which will be used for logging all actions
     performed in this simulation.
