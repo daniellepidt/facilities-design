@@ -36,3 +36,12 @@ def create_requests(file_name="prob_list.p") -> dict[int]:
     # requests_list = [Request(item) for item in random_requests]
     # return requests_list
     return counts_by_item
+
+def extract_probs(file_name="prob_list.p"):
+    with open(file_name, "rb") as file:
+        prob_list = pickle.load(file)
+    prob_dict = {}
+    for item in prob_list:
+        prob_dict[item[0]] = item[1]
+    prob_dict_sorted = sorted(prob_dict.items(), key=lambda x:x[1], reverse=True)
+    return prob_dict_sorted

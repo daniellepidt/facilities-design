@@ -57,8 +57,10 @@ class Aisle:
         # Create an array of 'height' floors, with 'width' number of cells per 'depth'.
         self.storage = np.zeros((height, width, depth))
         # Only pass in elevation settings if any were added
-        self.elevator = Elevator(**elevator_settings)
-        self.shuttles = [Shuttle(floor, **shuttle_settings) for floor in range(height)]
+        self.elevator = Elevator()
+        self.shuttles = [Shuttle(floor) for floor in range(height)]
+        # self.elevator = Elevator(**elevator_settings)
+        # self.shuttles = [Shuttle(floor, **shuttle_settings) for floor in range(height)]
 
     def __repr__(self):
         return "Aisle"
