@@ -4,6 +4,7 @@ import numpy as np
 import uuid
 from collections.abc import Sequence
 
+
 class EventType(Enum):
     ELEVATOR_MOVEMENT = 1
     SHUTTLE_FETCH = 2
@@ -48,9 +49,7 @@ class Event:
 
 
 class Aisle:
-    def __init__(
-        self, height=8, width=2, depth=16, elevator_settings=None, shuttle_settings=None
-    ):
+    def __init__(self, height=8, width=2, depth=16):
         self.height = height
         self.width = width
         self.depth = depth
@@ -59,8 +58,6 @@ class Aisle:
         # Only pass in elevation settings if any were added
         self.elevator = Elevator()
         self.shuttles = [Shuttle(floor) for floor in range(height)]
-        # self.elevator = Elevator(**elevator_settings)
-        # self.shuttles = [Shuttle(floor, **shuttle_settings) for floor in range(height)]
 
     def __repr__(self):
         return "Aisle"
