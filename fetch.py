@@ -21,6 +21,7 @@ def get_items_list_sorted_by_probability(file_name="prob_list.p"):
         prob_list = pickle.load(file)
     return sorted(prob_list, key=lambda x: x[1], reverse=True)
 
+
 def generate_random_requests(items_for_storage: Counter) -> Counter:
     """
     Returns a dict by the format of {item: amount_requested}
@@ -42,13 +43,11 @@ def generate_random_requests(items_for_storage: Counter) -> Counter:
         negative_values = [value < 0 for value in difference_from_allowed.values()]
         if not negative_values:
             break
-        log(f"While using seed {seed_value}, generated an impossible request. Trying seed {seed_value + 1}.")
+        log(
+            f"While using seed {seed_value}, generated an impossible request. Trying seed {seed_value + 1}."
+        )
         seed_value += 1
 
-    # TODO: Make sure that requests for specific items haven't exceeded the amount
-    # available in storage.
-    # TODO: Take care of cases where more then can be supply was requested:
-    
     log_opening = f"Created the following {ITEMS_IN_FETCH} requests:"
     log(SIMULATION_START_TIME, log_opening)
     for key, value in counts_by_item.items():
