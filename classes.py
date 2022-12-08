@@ -71,13 +71,19 @@ class Aisle:
 
     def calculate_travel_times_by_cell(self):
         """
+        Our basic assumption is that the elevator is the bottleneck 
+        (single elevator VS 8 shuttles),
+        so we would like to minimize the idle time of the elevator.
         Calculate a score for each cell according to
-        the collection time from it, in the worst case.
-        The best score is the smallest score.
+        minimum idle time of the elevator, in the worst case.
         """
         aisle_scores = self.storage.copy()
         aisle_scores_dict = {}
-        # Calculate the time it takes to collect an item from a particular cell in the worst case.
+        positive_scores_dict = {}
+        negative_scores_dict = {}
+        zero_scores_dict = {}
+        # Calculate the time it takes to collect an item from a particular cell in the worst case,
+        # and then calculate idle time of the elevator.
         # The worst case - the elevator and the shuttle start to move together (and not one before the other).
         vertical_move_time = (
             self.elevator.vertical_move_time
@@ -93,12 +99,24 @@ class Aisle:
                     shuttle_move_time = (
                         2 * (d * horizontal_move_time) + shuttle_load_time
                     )
+                    # For each cell - calculate the idle time for the elevator (the cell grade)
                     score = shuttle_move_time - elevator_move_time
                     aisle_scores[h][w][d] = score
-                    aisle_scores_dict[(h, w, d)] = score
-        # Sort the dictionary according to its values - from the smallest to the largest
-        # that is, from the most attractive cell (closest) to the unattractive cell.
-        aisle_scores_sorted = sorted(aisle_scores_dict.items(), key=lambda x: x[1])
+                    if score > 0:
+                        positive_scores_dict[(h, w, d)] = score
+                    elif score < 0:
+                        negative_scores_dict[(h, w, d)] = score
+                    else:
+                        zero_scores_dict[(h, w, d)] = score
+                    #aisle_scores_dict[(h, w, d)] = score
+        # Sort the scores so that they result in minimum idle time in general, and for the elevator in particular:
+        # 1. score 0 (no idle time; The elevator and the shuttle arrived at the same time). 
+        # 2. negative scores - from the greater to the smaller (minimum idle time for the shuttle; The elevator is on its way)
+        # 3. positive scores - from the smaller to the greater (minimum idle time for the elevator; The shuttle is on its way)
+        zero_scores_sorted = sorted(zero_scores_dict.items(), key=lambda x: x[1])
+        negative_scores_sorted = sorted(negative_scores_dict.items(), key=lambda x: x[1], reverse=True)
+        positive_scores_sorted = sorted(positive_scores_dict.items(), key=lambda x: x[1])
+        aisle_scores_sorted = zero_scores_sorted + negative_scores_sorted + positive_scores_sorted
         return aisle_scores, aisle_scores_sorted
 
     def store_items(
