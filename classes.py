@@ -86,16 +86,14 @@ class Aisle:
             # Get the shuttle action times:
             horizontal_move_time = self.shuttles[h].horizontal_move_time
             shuttle_load_time = self.shuttles[h].load_time
+            elevator_move_time = h * vertical_move_time
             for w in range(self.width):
                 for d in range(self.depth):
                     # Calculate:
-                    elevator_move_time = h * vertical_move_time
                     shuttle_move_time = (
                         2 * (d * horizontal_move_time) + shuttle_load_time
                     )
-                    score = (
-                        max(elevator_move_time, shuttle_move_time) + elevator_move_time
-                    )
+                    score = shuttle_move_time - elevator_move_time
                     aisle_scores[h][w][d] = score
                     aisle_scores_dict[(h, w, d)] = score
         # Sort the dictionary according to its values - from the smallest to the largest
