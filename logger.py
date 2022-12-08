@@ -5,7 +5,7 @@ generate the logs for the simulation.
 import logging
 from datetime import datetime, timedelta
 from globals import SIMULATION_START_TIME
-
+from os import mkdir
 
 
 def log(seconds_from_start: int, log_data=""):
@@ -29,6 +29,10 @@ def create_log_file(creation_time=SIMULATION_START_TIME):
     The log file will be created under the the logs directory,
     and will be under the name %Y_%m_%d_%H_%M_%S_log.log.
     """
+    try: 
+        mkdir('logs') 
+    except OSError:
+        pass
     filename = f'logs/{datetime.now().strftime("%Y_%m_%d_%H_%M_%S")}_log.log'
     logging.basicConfig(filename=filename, encoding="utf-8", level=logging.DEBUG)
     log(creation_time, f"Created log file successfully with filename: {filename}")
