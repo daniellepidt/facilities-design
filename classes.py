@@ -78,7 +78,6 @@ class Aisle:
         minimum idle time of the elevator, in the worst case.
         """
         aisle_scores = self.storage.copy()
-        aisle_scores_dict = {}
         positive_scores_dict = {}
         negative_scores_dict = {}
         zero_scores_dict = {}
@@ -108,7 +107,6 @@ class Aisle:
                         negative_scores_dict[(h, w, d)] = score
                     else:
                         zero_scores_dict[(h, w, d)] = score
-                    #aisle_scores_dict[(h, w, d)] = score
         # Sort the scores so that they result in minimum idle time in general, and for the elevator in particular:
         # 1. score 0 (no idle time; The elevator and the shuttle arrived at the same time). 
         # 2. negative scores - from the greater to the smaller (minimum idle time for the shuttle; The elevator is on its way)
@@ -152,7 +150,7 @@ class Aisle:
             ] = item_expectation
 
         # Get the storing requests, and the cell scores
-        available_cells_sorted = [cell[0] for cell in self.cell_travel_times_dict]
+        _, available_cells_sorted = [cell[0] for cell in self.cell_travel_times_dict]
 
         # Make sure the request is reasonable
         total_num_units = sum(items_for_storage_for_monitoring.values())
