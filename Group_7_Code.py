@@ -17,9 +17,14 @@ if __name__ == "__main__":
     print("aisle.storage")
     print(aisle.storage)
     # Create the requests:
-    requests = generate_random_requests(items_for_storage)
-    print("requests")
-    print(requests)
+    list_of_requests = [
+        generate_random_requests(
+            items_for_storage, sorted_items_probabilities_list, seed
+        )
+        for seed in range(0, 100, 10)
+    ]  # Create a list of 10 groups of 40 requests, each with a different seed.
+    print("list_of_requests")
+    print(list_of_requests)
     current_time = SIMULATION_START_TIME
     # Start the fetching process:
     # TODO: Create a fetching process

@@ -12,7 +12,7 @@ from classes import Request
 
 
 # TODO: Create a common functionality for getting the pickle file and use it in both functions.
-def get_items_list_sorted_by_probability(file_name="prob_list.p"):
+def get_items_list_sorted_by_probability(file_name="prob_list.p") -> list[list]:
     """
     Extracts from the pickle file the pairs of items & probabilities,
     and returns them sorted in a descending order by probability.
@@ -22,16 +22,17 @@ def get_items_list_sorted_by_probability(file_name="prob_list.p"):
     return sorted(prob_list, key=lambda x: x[1], reverse=True)
 
 
-def generate_random_requests(items_for_storage: Counter) -> Counter:
+def generate_random_requests(
+    items_for_storage: Counter, sorted_items_probabilities_list, seed_input=0
+) -> Counter:
     """
     Returns a dict by the format of {item: amount_requested}
     containing all of the randomly generated requests.
     """
-    prob_list = get_items_list_sorted_by_probability()
-    # Split the prob_list into two lists, of the items and their
+    # Split the sorted_items_probabilities_list into two lists, of the items and their
     # respective probabilities:
-    items, probabilities = map(list, zip(*prob_list))
-    seed_value = 0
+    items, probabilities = map(list, zip(*sorted_items_probabilities_list))
+    seed_value = seed_input
     while True:
         seed(seed_value)  # Seed the random number generator
         # Create a list of random requests:
@@ -44,7 +45,8 @@ def generate_random_requests(items_for_storage: Counter) -> Counter:
         if not negative_values:
             break
         log(
-            f"While using seed {seed_value}, generated an impossible request. Trying seed {seed_value + 1}."
+            SIMULATION_START_TIME,
+            f"While using seed {seed_value}, generated an impossible request. Trying seed {seed_value + 1}.",
         )
         seed_value += 1
 
