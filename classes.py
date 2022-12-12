@@ -150,7 +150,7 @@ class Aisle:
             ] = item_expectation
 
         # Get the storing requests, and the cell scores
-        _, available_cells_sorted = [cell[0] for cell in self.cell_travel_times_dict]
+        available_cells_sorted = [cell[0] for cell in self.cell_travel_times_dict]
 
         # Make sure the request is reasonable
         total_num_units = sum(items_for_storage_for_monitoring.values())
