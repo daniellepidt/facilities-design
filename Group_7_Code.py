@@ -25,6 +25,25 @@ if __name__ == "__main__":
     ]  # Create a list of 10 groups of 40 requests, each with a different seed.
     print("list_of_requests")
     print(list_of_requests)
+    aisle_scores = aisle.calculate_travel_times_by_cell()[0]
+    aisle_scores_sorted = aisle.calculate_travel_times_by_cell()[1]
+    #print(aisle_scores_sorted)
     current_time = SIMULATION_START_TIME
     # Start the fetching process:
     # TODO: Create a fetching process
+    shuttles_tasks = {i:[] for i in range(8)}
+    print(shuttles_tasks)
+    for r in list_of_requests:
+        for key in r:
+            while r[key] > 1:
+                for s in aisle_scores_sorted:
+                    print(aisle.storage[s[0][0]][s[0][1]][s[0][1]])
+                    if aisle.storage[s[0][0]][s[0][1]][s[0][1]] in r.keys():
+                        r[key] -= 1
+                        shuttles_tasks[s[0][0]].append(s[0])
+                        aisle_scores_sorted.remove(s)
+                        break
+    print(shuttles_tasks)
+
+
+                    
