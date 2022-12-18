@@ -264,10 +264,10 @@ class Elevator:
         self.unload_time = unload_time
         self.floor = 0  # Start on the groud floor
         self.carrying = None
-        self.tasks = None
+        # self.tasks = None
     
-    def set_tasks (self, tasks):
-        self.tasks = tasks
+    # def set_tasks (self, tasks):
+    #     self.tasks = tasks
 
     def __repr__(self):
         return "Elevator"
@@ -281,10 +281,10 @@ class Shuttle:
         self.unload_time = unload_time
         self.position = 0
         self.carrying = None
-        self.tasks = None
+        # self.tasks = None
 
     def __repr__(self):
         return f"Shuttle {self.floor + 1}"
     
-    def set_tasks (self, tasks):
-        self.tasks = tasks
+    # def set_tasks (self, tasks):
+    #     self.tasks = tasks
