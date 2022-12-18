@@ -39,11 +39,15 @@ class Request:
 
 
 class Event:
-    def __init__(self, time, type=EventType.ELEVATOR_MOVEMENT, item=None, P=[]):
+    def __init__(self, time, type=EventType.ELEVATOR_MOVEMENT, item=None,shuttle=None):
         self.time = time  # event time
         self.type = type  # event type
         self.item = item  # The Item related to the event
-        self.P = P  # Heap used for events
+        self.shuttle = shuttle
+        #self.P = P  # Heap used for events
+        #hq.heappush(P, self)  # add the event to the events list
+
+    def heappush(self, P):
         hq.heappush(P, self)  # add the event to the events list
 
     def __lt__(self, other_event):
@@ -260,6 +264,10 @@ class Elevator:
         self.unload_time = unload_time
         self.floor = 0  # Start on the groud floor
         self.carrying = None
+        self.tasks = None
+    
+    def set_tasks (self, tasks):
+        self.tasks = tasks
 
     def __repr__(self):
         return "Elevator"
@@ -273,6 +281,10 @@ class Shuttle:
         self.unload_time = unload_time
         self.position = 0
         self.carrying = None
+        self.tasks = None
 
     def __repr__(self):
         return f"Shuttle {self.floor + 1}"
+    
+    def set_tasks (self, tasks):
+        self.tasks = tasks

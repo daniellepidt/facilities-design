@@ -1,8 +1,21 @@
-from globals import SIMULATION_START_TIME
+from globals import SIMULATION_START_TIME, P
 from logger import create_log_file, log
 from storage import get_items_for_storage
 from fetch import get_items_list_sorted_by_probability, generate_random_requests
-from classes import Aisle
+from classes import Aisle, Event, EventType
+import heapq
+
+def create_shuttle_fetch(s,el): # Gets shuttle - for not duplicating code
+    if not s.carrying:
+        # If the shuttle is empty
+        r = s.tasks.pop(0)
+        s.carrying = aisle.storage[r[0]][r[1]][r[2]]
+        s.position = r
+        el.tasks.append(r[0])
+        e = Event(current_time+s.horizontal_move_time*2*r[2]+s.load_time,EventType.ELEVATOR_LOAD,s.carrying,s)
+        e.heappush(P)
+
+         
 
 if __name__ == "__main__":
     create_log_file()  # Create the log file
@@ -27,12 +40,11 @@ if __name__ == "__main__":
     print(list_of_requests)
     aisle_scores = aisle.calculate_travel_times_by_cell()[0]
     aisle_scores_sorted = aisle.calculate_travel_times_by_cell()[1]
-    #print(aisle_scores_sorted)
+    
     current_time = SIMULATION_START_TIME
     # Start the fetching process:
-    # TODO: Create a fetching process
+    # Preprocessing the requests:
     shuttles_tasks = {i:[] for i in range(8)}
-    print(shuttles_tasks)
     for r in list_of_requests:
         for key in r:
             while r[key] > 1:
@@ -44,6 +56,17 @@ if __name__ == "__main__":
                         aisle_scores_sorted.remove(s)
                         break
     print(shuttles_tasks)
+    print(aisle.shuttles)
+    for n in shuttles_tasks: # Setting the tasks to the shuttles
+        for s in aisle.shuttles:
+            s.set_tasks(n)
+    # First events
+    el = aisle.elevator
+    for s in aisle.shuttles:
+        create_shuttle_fetch(s,el)
+    event = heapq.heappop(P)
+    curr_time = event.time
+    
 
 
                     
