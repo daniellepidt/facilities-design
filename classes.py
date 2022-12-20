@@ -3,18 +3,18 @@ import heapq as hq
 import numpy as np
 import uuid
 from collections import Counter
-from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME, PrivateError
+from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME, PrivateError, P
 from logger import log
 
 
-class EventType(Enum):
-    ELEVATOR_MOVEMENT = 1
-    SHUTTLE_FETCH = 2
-    ELEVATOR_LOAD = 3
-    ELEVATOR_UNLOAD = 4
+# class EventType(Enum):
+#     ELEVATOR_MOVEMENT = 1
+#     SHUTTLE_FETCH = 2
+#     ELEVATOR_LOAD = 3
+#     ELEVATOR_UNLOAD = 4
 
-    def __repr__(self):
-        return self.name.lower().replace("_", " ")
+#     def __repr__(self):
+#         return self.name.lower().replace("_", " ")
 
 
 class Item:
@@ -39,16 +39,15 @@ class Request:
 
 
 class Event:
-    def __init__(self, time, type=EventType.ELEVATOR_MOVEMENT, item=None,shuttle=None):
+    def __init__(self, time, item=None,shuttle=None):
         self.time = time  # event time
-        self.type = type  # event type
         self.item = item  # The Item related to the event
         self.shuttle = shuttle
         #self.P = P  # Heap used for events
-        #hq.heappush(P, self)  # add the event to the events list
-
-    def heappush(self, P):
         hq.heappush(P, self)  # add the event to the events list
+
+    # def heappush(self, P):
+    #     hq.heappush(P, self)  # add the event to the events list
 
     def __lt__(self, other_event):
         return self.time < other_event.time
