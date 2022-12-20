@@ -75,6 +75,8 @@ def event_generator(curr_time, request):
             relevant_times -= available_time_range
             i = check_fetching(relevant_times)
             Event()#Need to fill
+            storage_copy[i] = 0
+            request.remove(storage_copy[i])
         else:
             break
 
