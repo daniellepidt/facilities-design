@@ -70,6 +70,7 @@ def event_generator(curr_time:int, request):
                     relevant_locations[relevant_locations==key] = 1.0
             else: # The shuttle is not available
                 relevant_locations[:][s.floor] = 0.0
+        relevant_locations[relevant_locations!=1.0] = 0.0
         """
         If there are any relevant locations = at least one shuttle is 
         availble and there is order to fetch
@@ -94,9 +95,10 @@ def event_generator(curr_time:int, request):
                 back to the elevator, loads it to the elevetor, the elevator
                 goes to the I/0 and then unloads to the truck.
                 """
-                Event(max_time+2*s_for_times.horizontal_move_time*i[1]+s_for_times.load_time+s_for_times.unload_time+el_for_times.vertical_move_time*i[0]+el_for_times.unload_time)
+                Event(max_time+2*s_for_times.horizontal_move_time*i[1]+s_for_times.load_time+s_for_times.unload_time+el_for_times.vertical_move_time*i[0]+el_for_times.unload_time,storage_copy[i],AISLE.shuttles[i[0]])
             else: # If the shuttle is idle
-                Event(max_time+2*el_for_times.vertical_move_time+s_for_times.unload_time+el_for_times.unload_time)
+                Event(max_time+2*el_for_times.vertical_move_time+s_for_times.unload_time+el_for_times.unload_time,storage_copy[i],AISLE.shuttles[i[0]])
+            AISLE.shuttles[i[0]].carrying = storage_copy[i]
             request[storage_copy[i]]-=1
             storage_copy[i] = 0
         else:
