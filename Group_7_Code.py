@@ -31,8 +31,17 @@ storage_copy = AISLE.storage.copy()
 aisle_scores = AISLE.calculate_travel_times_by_cell()[0]
 s_for_times = AISLE.shuttles[0] # Just to get times
 el_for_times = AISLE.elevator # Just to get times
+events_list = []
+curr_time = SIMULATION_START_TIME
 
 # Functions for the fetching process:
+
+def reset_sim():
+    storage_copy = AISLE.storage.copy()
+    P = []
+    for s in AISLE.shuttles:
+        s.carrying = None
+
 # For finding the time of the last task
 def find_max_element(heap) -> float:
     # Get no. of nodes
@@ -63,32 +72,28 @@ def event_generator(curr_time:float, request):
         # Building relevant locations matrix
         relevant_locations = storage_copy.copy()
         # Building events for every available shuttle
+        for key in request.keys():
+            relevant_locations[relevant_locations==key] = 1.0
         for s in AISLE.shuttles:
-            if not s.carrying:
-                # If there is a relevant cell for the order
-                for key in request.keys():
-                    relevant_locations[relevant_locations==key] = 1.0
-            else: # The shuttle is not available
+            if s.carrying: # The shuttle is not available
                 relevant_locations[:][s.floor] = 0.0
         relevant_locations[relevant_locations!=1.0] = 0.0
         """
         If there are any relevant locations = at least one shuttle is 
         availble and there is order to fetch
         """
-        print("relevant_locations")
-        print(relevant_locations)
-        if np.any(relevant_locations== 1.0) :
+        if np.any(relevant_locations == 1.0) :
             # Building relavant times matrix
             relevant_times = np.multiply(relevant_locations,aisle_scores)
             relevant_times[relevant_times==0.0] = np.inf
             max_time = find_max_element(P)
             available_time_range = curr_time - max_time
             relevant_times += available_time_range
-            print("relevant_times")
-            print(relevant_times)
             i = check_fetching(relevant_times)
             if relevant_times[i] <= 0: # If the shuttle is idle
+                events_list.append([i,storage_copy[i],max_time+2*el_for_times.vertical_move_time*i[0]+s_for_times.unload_time+el_for_times.unload_time])
                 Event(max_time+2*el_for_times.vertical_move_time*i[0]+s_for_times.unload_time+el_for_times.unload_time,storage_copy[i],AISLE.shuttles[i[0]])
+                print(events_list)
             else: # If the elevetor is idle
                 """
                 The event will end when the elevator will finish it's tasks,
@@ -97,9 +102,13 @@ def event_generator(curr_time:float, request):
                 back to the elevator, loads it to the elevetor, the elevator
                 goes to the I/0 and then unloads to the truck.
                 """
+                events_list.append([i,storage_copy[i],max_time+2*s_for_times.horizontal_move_time*i[2]+s_for_times.load_time+s_for_times.unload_time+el_for_times.vertical_move_time*i[0]+el_for_times.unload_time])
+                print(events_list)
                 Event(max_time+2*s_for_times.horizontal_move_time*i[2]+s_for_times.load_time+s_for_times.unload_time+el_for_times.vertical_move_time*i[0]+el_for_times.unload_time,storage_copy[i],AISLE.shuttles[i[0]])
             AISLE.shuttles[i[0]].carrying = storage_copy[i]
             request[storage_copy[i]]-=1
+            if request[storage_copy[i]] == 0:
+                request.pop(storage_copy[i])
             storage_copy[i] = 0
         else:
             print("No relevant shuttle/items")
@@ -116,11 +125,14 @@ if __name__ == "__main__":
     # times = []
     request_c_max = []
     # Start of the simulation
-    for request in REQUESTS:
+    for request in REQUESTS[0:2]:
+        print(sum(request.values()))
+        reset_sim()
+        curr_time = SIMULATION_START_TIME
+        events_list = []
         print("Starting to handle a new request")
         print(request)
         # Creating First events
-        curr_time = SIMULATION_START_TIME
         event_generator(curr_time,request)
         event = heapq.heappop(P)
         curr_time = event.time
@@ -132,6 +144,7 @@ if __name__ == "__main__":
             event = heapq.heappop(P)
             curr_time = event.time
         request_c_max.append(curr_time)
+        print(sum(request.values()))
         print(request_c_max)    
 print(request_c_max)    
     
