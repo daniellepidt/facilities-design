@@ -1,4 +1,3 @@
-from enum import Enum
 import heapq as hq
 import numpy as np
 import uuid
@@ -39,11 +38,12 @@ class Request:
 
 
 class Event:
-    def __init__(self, time, item=None,shuttle=None):
+    def __init__(self, time, item=None, shuttle=None, location=None):
         self.time = time  # event time
         self.item = item  # The Item related to the event
         self.shuttle = shuttle
-        #self.P = P  # Heap used for events
+        self.location = location  # The location from which the item was fetched
+        # self.P = P  # Heap used for events
         hq.heappush(P, self)  # add the event to the events list
 
     # def heappush(self, P):
@@ -74,7 +74,7 @@ class Aisle:
 
     def calculate_travel_times_by_cell(self):
         """
-        Our basic assumption is that the elevator is the bottleneck 
+        Our basic assumption is that the elevator is the bottleneck
         (single elevator VS 8 shuttles),
         so we would like to minimize the idle time of the elevator.
         Calculate a score for each cell according to
@@ -111,13 +111,19 @@ class Aisle:
                     else:
                         zero_scores_dict[(h, w, d)] = score
         # Sort the scores so that they result in minimum idle time in general, and for the elevator in particular:
-        # 1. score 0 (no idle time; The elevator and the shuttle arrived at the same time). 
+        # 1. score 0 (no idle time; The elevator and the shuttle arrived at the same time).
         # 2. negative scores - from the greater to the smaller (minimum idle time for the shuttle; The elevator is on its way)
         # 3. positive scores - from the smaller to the greater (minimum idle time for the elevator; The shuttle is on its way)
         zero_scores_sorted = sorted(zero_scores_dict.items(), key=lambda x: x[1])
-        negative_scores_sorted = sorted(negative_scores_dict.items(), key=lambda x: x[1], reverse=True)
-        positive_scores_sorted = sorted(positive_scores_dict.items(), key=lambda x: x[1])
-        aisle_scores_sorted = zero_scores_sorted + negative_scores_sorted + positive_scores_sorted
+        negative_scores_sorted = sorted(
+            negative_scores_dict.items(), key=lambda x: x[1], reverse=True
+        )
+        positive_scores_sorted = sorted(
+            positive_scores_dict.items(), key=lambda x: x[1]
+        )
+        aisle_scores_sorted = (
+            zero_scores_sorted + negative_scores_sorted + positive_scores_sorted
+        )
         return aisle_scores, aisle_scores_sorted
 
     def store_items(
@@ -264,7 +270,7 @@ class Elevator:
         self.floor = 0  # Start on the groud floor
         self.carrying = None
         # self.tasks = None
-    
+
     # def set_tasks (self, tasks):
     #     self.tasks = tasks
 
@@ -284,6 +290,6 @@ class Shuttle:
 
     def __repr__(self):
         return f"Shuttle {self.floor + 1}"
-    
+
     # def set_tasks (self, tasks):
     #     self.tasks = tasks

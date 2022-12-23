@@ -50,12 +50,7 @@ def generate_random_requests(
         )
         seed_value += 1
 
-    log_opening = f"Created the following {ITEMS_IN_FETCH} requests:"
+    log_opening = f"Created the following {sum(counts_by_item.values())} requests:"
     log(SIMULATION_START_TIME, log_opening)
-    for key, value in counts_by_item.items():
-        key_value_log = f"{key}:{value}"
-        log(SIMULATION_START_TIME, key_value_log)
-    # TODO: Decide if to use the Request class at all.
-    # requests_list = [Request(item) for item in random_requests]
-    # return requests_list
+    log(SIMULATION_START_TIME, counts_by_item)
     return counts_by_item
