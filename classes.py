@@ -287,6 +287,7 @@ class Shuttle:
         self.position = 0
         self.carrying = None
         # self.tasks = None
+        self.current_tasks_completion_time = 0
 
     def __repr__(self):
         return f"Shuttle {self.floor + 1}"
