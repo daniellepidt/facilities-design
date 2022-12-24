@@ -50,10 +50,16 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
     while True:
         relevant_locations = aisle.storage.copy()  # Building relevant locations matrix
         for key in request.keys():
-            relevant_locations[relevant_locations == key] = 1.0 # Assign all relevant items' locations into 1.0
-        relevant_locations[relevant_locations != 1.0] = 0.0 # Assign all irrelevant items' locations into 0.0
-        
-        if np.any(relevant_locations == 1.0): # If there are any relevant locations = there is at least one order to fetch
+            relevant_locations[
+                relevant_locations == key
+            ] = 1.0  # Assign all relevant items' locations into 1.0
+        relevant_locations[
+            relevant_locations != 1.0
+        ] = 0.0  # Assign all irrelevant items' locations into 0.0
+
+        if np.any(
+            relevant_locations == 1.0
+        ):  # If there are any relevant locations = there is at least one order to fetch
             # Building relavant times matrix
 
             next_time_elevator_is_free = find_max_element(P)
@@ -150,23 +156,21 @@ if __name__ == "__main__":
         )
         for seed in range(0, 100, 10)
     ]  # Create a list of 10 groups of 40 requests, each with a different seed.
+    log(SIMULATION_START_TIME, "All requests were created.")
 
+    # Create metrics:
     request_c_max = []
+
     # Start of the simulation
-    for request in REQUESTS:
-        print(sum(request.values()))
+    for index, request in enumerate(REQUESTS):
+        curr_time = SIMULATION_START_TIME  # = 0
+        log(curr_time, f"Handling request #{index}:")
+        log(curr_time, request)
         aisle = Aisle()
         # Start the storage process:
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
-        # print("aisle.storage")
-        # print(aisle.storage)
         # For the fetching process:
-        # storage_copy = aisle.storage.copy()
-        aisle_scores = aisle.cell_travel_times_array
-        curr_time = SIMULATION_START_TIME
         events_list = []
-        print("Starting to handle a new request")  # TODO: Replace with log function
-        print(request)
         # Creating First events
         event_generator(aisle, curr_time, request)
         event = heapq.heappop(P)
@@ -182,6 +186,6 @@ if __name__ == "__main__":
             event = heapq.heappop(P)
             curr_time = event.time
         request_c_max.append(curr_time)
-        print(sum(request.values()))
-        log(curr_time, f"Finished a requests round with C_max: {request_c_max}")
+        log(curr_time, f"Finished a requests round with C_max: {curr_time}")
 log(curr_time, f"Finished all requests rounds with C_max: {request_c_max}")
+print(events_list)

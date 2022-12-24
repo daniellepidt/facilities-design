@@ -50,7 +50,7 @@ def generate_random_requests(
         )
         seed_value += 1
 
-    log_opening = f"Created the following {sum(counts_by_item.values())} requests:"
+    log_opening = f"Created request #{seed_value // 10} with the following {sum(counts_by_item.values())} items:"
     log(SIMULATION_START_TIME, log_opening)
     log(SIMULATION_START_TIME, counts_by_item)
     return counts_by_item

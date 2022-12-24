@@ -58,7 +58,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
         
         if np.any(relevant_locations == 1.0): # If there are any relevant locations = there is at least one order to fetch
             # Building relavant times matrix
-            relevant_times = np.multiply(relevant_locations, aisle_scores)
+            relevant_times = np.multiply(relevant_locations, aisle.cell_travel_times_array)
             relevant_times[relevant_times == 0.0] = np.inf
             next_time_elevator_is_free = find_max_element(P)
             available_time_range = curr_time - next_time_elevator_is_free
@@ -86,14 +86,13 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
             )
             shuttle_fetch_time = (
                 aisle.shuttles[i[0]].current_tasks_completion_time
-                + (2 * shuttle_horizontal_move_time * i[2])
+                + (2 * aisle.shuttles[i[0]].horizontal_move_time * i[2])
                 + shuttle_load_time
             )
             time_until_shuttle_and_elevator_meet = max(
                 elevator_arrival_to_floor_time, shuttle_fetch_time
             )
-            #print(int(shuttle_fetch_time))
-            #print(type(int(shuttle_fetch_time)))
+
             item_unloaded_to_io_time = (
                 time_until_shuttle_and_elevator_meet
                 + shuttle_unload_time
@@ -102,15 +101,15 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
             )
             item = aisle.storage[i]
             events_list.append([i, item, item_unloaded_to_io_time])
-            Event(
-                item_unloaded_to_io_time, item, aisle.shuttles[i[0]], i
-            )
-            aisle.shuttles[i[0]].current_tasks_completion_time = time_until_shuttle_and_elevator_meet + shuttle_unload_time
+            Event(item_unloaded_to_io_time, item, aisle.shuttles[i[0]], i)
             log(
                 curr_time,
                 f"Shuttle #{i[0]} will bring item {int(item)} from {i} at {parser_simulation_time(int(shuttle_fetch_time))}.",
             )
             aisle.shuttles[i[0]].carrying = item
+            aisle.shuttles[i[0]].current_tasks_completion_time = (
+                time_until_shuttle_and_elevator_meet + shuttle_unload_time
+            )
             request[item] -= 1
             if request[item] == 0:
                 request.pop(item)
@@ -133,31 +132,28 @@ if __name__ == "__main__":
         )
         for seed in range(0, 100, 10)
     ]  # Create a list of 10 groups of 40 requests, each with a different seed.
+    log(SIMULATION_START_TIME, "All requests were created.")
 
+    # Create metrics:
     request_c_max = []
+
     # Start of the simulation
-    for request in REQUESTS:
-        print(sum(request.values()))
+    for index, request in enumerate(REQUESTS):
+        curr_time = SIMULATION_START_TIME  # = 0
+        log(curr_time, f"Handling request #{index}:")
+        log(curr_time, request)
         aisle = Aisle()
         # Start the storage process:
-        
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
-        # print("aisle.storage")
-        # print(aisle.storage)
         # For the fetching process:
-        # storage_copy = aisle.storage.copy()
-        aisle_scores = aisle.calculate_travel_times_by_cell()[0]
-        curr_time = SIMULATION_START_TIME
         events_list = []
-        print("Starting to handle a new request")
-        print(request)
         # Creating First events
         event_generator(aisle, curr_time, request)
         event = heapq.heappop(P)
         curr_time = event.time
         while P:
             log(
-                curr_time,
+                int(curr_time),
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
             event.shuttle.carrying = None
@@ -166,6 +162,5 @@ if __name__ == "__main__":
             event = heapq.heappop(P)
             curr_time = event.time
         request_c_max.append(curr_time)
-        print(sum(request.values()))
-        log(curr_time, f"Finished a requests round with C_max: {request_c_max}")
+        log(curr_time, f"Finished a requests round with C_max: {curr_time}")
 log(curr_time, f"Finished all requests rounds with C_max: {request_c_max}")
