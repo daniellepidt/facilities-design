@@ -40,7 +40,6 @@ def check_fetching(relevant_times: np.ndarray) -> tuple[int]:
         # חישוב מדד זמן בטלה למעלית
         return np.unravel_index(np.argmin(relevant_times), relevant_times.shape)
 
-
 # For generating fetching events - returns nothing
 def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_index: int) -> None:
     """
@@ -48,7 +47,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
     """
     shuttle_load_time = aisle.shuttles[0].load_time
     shuttle_unload_time = aisle.shuttles[0].unload_time
-    shuttle_horizontal_move_time = aisle.shuttles[0].horizontal_move_time
+    # shuttle_horizontal_move_time = aisle.shuttles[0].horizontal_move_time
     elevator_unload_time = aisle.elevator.unload_time
     elevator_vertical_move_time = aisle.elevator.vertical_move_time
     while True:
@@ -59,10 +58,11 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
         
         if np.any(relevant_locations == 1.0): # If there are any relevant locations = there is at least one order to fetch
             # Building relavant times matrix
-            relevant_times = np.multiply(relevant_locations, aisle.cell_travel_times_array)
+            relevant_times = np.multiply(relevant_locations, aisle.scores_cells_of_idle_time_array)
             relevant_times[relevant_times == 0.0] = np.inf
             next_time_elevator_is_free = find_max_element(P)
-            available_time_range = curr_time - next_time_elevator_is_free
+            #available_time_range = curr_time - next_time_elevator_is_free
+            available_time_range = - next_time_elevator_is_free
             relevant_times += available_time_range
             #i = check_fetching(relevant_times)  # i is an (i,j,k) index
             i = None
@@ -72,14 +72,16 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
                 relevant_times[:][s.floor] += s.current_tasks_completion_time 
                 # If a cell provides idle time for the shuttle (and not for the elevator)
                 if np.any(relevant_times[:][s.floor] <= 0.0):
-                    i = check_fetching(relevant_times[:][s.floor])
-                    i = list(i)
+                    #i = check_fetching(relevant_times[:][s.floor])
+                    relevant_times[relevant_times > 0.0] = np.nan
+                    i = list(np.unravel_index(np.nanargmax(relevant_times[:][s.floor]), relevant_times[:][s.floor].shape))
                     i.insert(0, s.floor)
                     i = tuple(i)
                     break
             # If there is necessarily idle time for the elevator
             if i == None:
-                i = check_fetching(relevant_times)
+                i = np.unravel_index(np.argmin(relevant_times), relevant_times.shape)
+                #i = check_fetching(relevant_times)
             
             elevator_time_to_floor = elevator_vertical_move_time * i[0]
             elevator_arrival_to_floor_time = (
