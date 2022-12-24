@@ -87,7 +87,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
             )
             shuttle_fetch_time = (
                 aisle.shuttles[i[0]].current_tasks_completion_time
-                + (2 * aisle.shuttles[i[0]].horizontal_move_time * i[2])
+                + (2 * aisle.shuttles[i[0]].horizontal_move_time * i[1])
                 + shuttle_load_time
             )
             time_until_shuttle_and_elevator_meet = max(
@@ -104,8 +104,8 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
             simulation_metrics.append({
                 "request_index": request_index,
                 "height": i[0],
-                "width": i[1],
-                "depth": i[2],
+                "width": i[2],
+                "depth": i[1],
                 "fetched_item": item,
                 "time_to_fulfillment": item_unloaded_to_io_time - next_time_elevator_is_free,
                 "elevator_idle_time": max(shuttle_fetch_time - elevator_arrival_to_floor_time, 0),  # If the elevator arrives before the shuttle, then it has idle time.

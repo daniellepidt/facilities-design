@@ -59,7 +59,7 @@ class Aisle:
         self.width = width
         self.depth = depth
         # Create an array of 'height' floors, with 'width' number of cells per 'depth'.
-        self.storage = np.zeros((height, width, depth))
+        self.storage = np.zeros((height, depth, width))
         self.storage_dict = {}
         # Only pass in elevation settings if any were added
         self.elevator = Elevator()
@@ -95,21 +95,21 @@ class Aisle:
             horizontal_move_time = self.shuttles[h].horizontal_move_time
             shuttle_load_time = self.shuttles[h].load_time
             elevator_move_time = h * vertical_move_time
-            for w in range(self.width):
-                for d in range(self.depth):
+            for d in range(self.depth):
+                for w in range(self.width):
                     # Calculate:
                     shuttle_move_time = (
                         2 * (d * horizontal_move_time) + shuttle_load_time
                     )
                     # For each cell - calculate the idle time for the elevator (the cell grade)
                     score = shuttle_move_time - elevator_move_time
-                    aisle_scores[h][w][d] = score
+                    aisle_scores[h][d][w] = score
                     if score > 0:
-                        positive_scores_dict[(h, w, d)] = score
+                        positive_scores_dict[(h, d, w)] = score
                     elif score < 0:
-                        negative_scores_dict[(h, w, d)] = score
+                        negative_scores_dict[(h, d, w)] = score
                     else:
-                        zero_scores_dict[(h, w, d)] = score
+                        zero_scores_dict[(h, d, w)] = score
         # Sort the scores so that they result in minimum idle time in general, and for the elevator in particular:
         # 1. score 0 (no idle time; The elevator and the shuttle arrived at the same time).
         # 2. negative scores - from the greater to the smaller (minimum idle time for the shuttle; The elevator is on its way)
