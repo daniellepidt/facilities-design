@@ -140,7 +140,7 @@ if __name__ == "__main__":
         # print(aisle.storage)
         # For the fetching process:
         # storage_copy = aisle.storage.copy()
-        aisle_scores = aisle.calculate_travel_times_by_cell()[0]
+        aisle_scores = aisle.calculate_scores_cells_of_idle_time()[0]
         curr_time = SIMULATION_START_TIME
         events_list = []
         print("Starting to handle a new request") # TODO: Replace with log function

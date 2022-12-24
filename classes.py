@@ -65,14 +65,14 @@ class Aisle:
         self.elevator = Elevator()
         self.shuttles = [Shuttle(floor) for floor in range(height)]
         (
-            self.cell_travel_times_array,
-            self.cell_travel_times_dict,
-        ) = self.calculate_travel_times_by_cell()
+            self.scores_cells_of_idle_time_array,
+            self.scores_cells_of_idle_time_dict,
+        ) = self.calculate_scores_cells_of_idle_time()
 
     def __repr__(self):
         return "Aisle"
 
-    def calculate_travel_times_by_cell(self):
+    def calculate_scores_cells_of_idle_time(self):
         """
         Our basic assumption is that the elevator is the bottleneck
         (single elevator VS 8 shuttles),
@@ -148,6 +148,16 @@ class Aisle:
         items_for_storage_for_monitoring = items_for_storage.copy()
         item_storage_by_location_dict = {}
 
+        # Make sure the request is reasonable
+        total_num_units = sum(items_for_storage_for_monitoring.values())
+        if total_num_units > height * width * depth:
+            raise PrivateError(
+                f"Number of items for storage is greater then the amount of storage available in the {self}."
+            )
+        
+        # Get the storing requests, and the cell scores
+        available_cells_sorted = [cell[0] for cell in self.scores_cells_of_idle_time_dict]
+
         # Get the probabilities for each item, and calculate expectations
         sorted_items_expectation_dict = {}
         for i in range(len(sorted_items_probabilities_list)):
@@ -157,16 +167,6 @@ class Aisle:
             sorted_items_expectation_dict[
                 sorted_items_probabilities_list[i][0]
             ] = item_expectation
-
-        # Get the storing requests, and the cell scores
-        available_cells_sorted = [cell[0] for cell in self.cell_travel_times_dict]
-
-        # Make sure the request is reasonable
-        total_num_units = sum(items_for_storage_for_monitoring.values())
-        if total_num_units > height * width * depth:
-            raise PrivateError(
-                f"Number of items for storage is greater then the amount of storage available in the {self}."
-            )
 
         # Store the items by the heuristic:
         # First, store according to expectations
