@@ -6,6 +6,7 @@ from classes import Aisle, Event
 from collections import Counter
 import numpy as np
 import heapq
+from output import create_results_csv
 
 
 def find_max_element(heap) -> float:
@@ -41,7 +42,7 @@ def check_fetching(relevant_times: np.ndarray) -> tuple[int]:
 
 
 # For generating fetching events - returns nothing
-def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
+def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_index: int) -> None:
     """
     Generates events
     """
@@ -124,7 +125,14 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
                 + elevator_unload_time
             )
             item = aisle.storage[i]
-            events_list.append([i, item, item_unloaded_to_io_time])
+            simulation_metrics.append({
+                "request_index": request_index,
+                "location": i,
+                "fetched_item": item,
+                "time_to_fulfillment": item_unloaded_to_io_time - next_time_elevator_is_free,
+                "elevator_idle_time": max(shuttle_fetch_time - elevator_arrival_to_floor_time, 0),  # If the elevator arrives before the shuttle, then it has idle time.
+                "shuttle_idle_time": max(elevator_arrival_to_floor_time - shuttle_fetch_time, 0)  # If the shuttle arrives before the elevator, then it has idle time.
+            })
             Event(item_unloaded_to_io_time, item, aisle.shuttles[i[0]], i)
             log(
                 curr_time,
@@ -144,7 +152,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
 
 
 if __name__ == "__main__":
-    create_log_file()  # Create the log file
+    timestamp = create_log_file()  # Create the log file
     # Get the storage list - making global for this file:
     ITEMS_FOR_STORAGE = get_items_for_storage()
     SORTED_ITEMS_PROBABILITIES_LIST = get_items_list_sorted_by_probability()
@@ -160,6 +168,7 @@ if __name__ == "__main__":
 
     # Create metrics:
     request_c_max = []
+    simulation_metrics = []
 
     # Start of the simulation
     for index, request in enumerate(REQUESTS):
@@ -169,10 +178,10 @@ if __name__ == "__main__":
         aisle = Aisle()
         # Start the storage process:
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
+        # TODO: Create a pickling functionality and create a locations .p file
         # For the fetching process:
-        events_list = []
         # Creating First events
-        event_generator(aisle, curr_time, request)
+        event_generator(aisle, curr_time, request, index)
         event = heapq.heappop(P)
         curr_time = event.time
         while P:
@@ -181,11 +190,15 @@ if __name__ == "__main__":
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
             event.shuttle.carrying = None
-            event_generator(aisle, curr_time, request)
+            event_generator(aisle, curr_time, request, index)
             # print("Continue to next event")
             event = heapq.heappop(P)
             curr_time = event.time
         request_c_max.append(curr_time)
         log(curr_time, f"Finished a requests round with C_max: {curr_time}")
 log(curr_time, f"Finished all requests rounds with C_max: {request_c_max}")
-print(events_list)
+
+create_results_csv(timestamp, simulation_metrics)
+log(curr_time, f"Created results file under: results/{timestamp}_results.csv")
+
+# TODO: Create a pickling functionality which creates the results .p file.
