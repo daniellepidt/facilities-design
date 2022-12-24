@@ -127,7 +127,9 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
             item = aisle.storage[i]
             simulation_metrics.append({
                 "request_index": request_index,
-                "location": i,
+                "height": i[0],
+                "width": i[1],
+                "depth": i[2],
                 "fetched_item": item,
                 "time_to_fulfillment": item_unloaded_to_io_time - next_time_elevator_is_free,
                 "elevator_idle_time": max(shuttle_fetch_time - elevator_arrival_to_floor_time, 0),  # If the elevator arrives before the shuttle, then it has idle time.

@@ -11,7 +11,7 @@ def create_results_csv(timestamp, metrics):
     metrics_df = pd.DataFrame(metrics)
     existing_columns = metrics_df.columns.tolist()
 
-    columns = existing_columns[3:]
+    columns = ["height", "depth"] + existing_columns[5:]
     for col in columns:
         metrics_df[f"cumulative_{col}"] = metrics_df.groupby("request_index")[
             col
@@ -20,11 +20,11 @@ def create_results_csv(timestamp, metrics):
     all_new_columns = [
         [col, f"cumulative_{col}", f"total_cumulative_{col}"] for col in columns
     ]
-    new_columns_order = existing_columns[0:3] + [col for sublist in all_new_columns for col in sublist]
+    # new_columns_order = existing_columns[0:5] + [col for sublist in all_new_columns for col in sublist]
     # list(
     #     (set(existing_columns) - set(columns)).union(
     #         set([col for sublist in all_new_columns for col in sublist])
     #     )
     # )
-    metrics_df = metrics_df[new_columns_order]
+    # metrics_df = metrics_df[new_columns_order]
     metrics_df.to_csv(f"results/{timestamp}_results.csv", encoding="utf-8")
