@@ -51,72 +51,35 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
     elevator_unload_time = aisle.elevator.unload_time
     elevator_vertical_move_time = aisle.elevator.vertical_move_time
     while True:
-        # Get the unique values from the order
-        # counts_by_item = Counter(request) - i think don't need
-        # Building relevant locations matrix
-        relevant_locations = aisle.storage.copy()
-        # Building events for every available shuttle
+        relevant_locations = aisle.storage.copy()  # Building relevant locations matrix
         for key in request.keys():
-            relevant_locations[relevant_locations == key] = 1.0
-        # for s in aisle.shuttles:
-        #     if s.carrying:  # The shuttle is not available
-        #         relevant_locations[:][s.floor] = 0.0
-        relevant_locations[relevant_locations != 1.0] = 0.0
-        """
-        If there are any relevant locations = at least one shuttle is 
-        availble and there is an order to fetch
-        """
-        if np.any(relevant_locations == 1.0):
+            relevant_locations[relevant_locations == key] = 1.0 # Assign all relevant items' locations into 1.0
+        relevant_locations[relevant_locations != 1.0] = 0.0 # Assign all irrelevant items' locations into 0.0
+        
+        if np.any(relevant_locations == 1.0): # If there are any relevant locations = there is at least one order to fetch
             # Building relavant times matrix
-            
-            next_time_elevator_is_free = find_max_element(P)
-            
-            fetch_time_matrix = np.zeros((aisle.height, aisle.width, aisle.depth))
-            for h in range(aisle.height):
-                # Get the shuttle action times:
-                horizontal_move_time = aisle.shuttles[h].horizontal_move_time
-                shuttle_load_time = aisle.shuttles[h].load_time
-                elevator_time_to_floor = h * aisle.elevator.vertical_move_time
-                # elevator_time_to_floor = elevator_vertical_move_time * h
-                elevator_arrival_to_floor_time = (
-                    next_time_elevator_is_free + elevator_time_to_floor
-                )
-                for w in range(aisle.width):
-                    for d in range(aisle.depth):
-                        # Calculate:
-                        shuttle_move_time = (
-                            2 * (d * horizontal_move_time) + shuttle_load_time
-                        )
-                        shuttle_fetch_time = (
-                            aisle.shuttles[h].current_tasks_completion_time
-                            + shuttle_move_time
-                            + shuttle_load_time
-                        )
-                        time_until_shuttle_and_elevator_meet = max(
-                            elevator_arrival_to_floor_time, shuttle_fetch_time
-                        )
-                        item_unloaded_to_io_time = (
-                            time_until_shuttle_and_elevator_meet
-                            + shuttle_unload_time
-                            + elevator_time_to_floor
-                            + elevator_unload_time
-                        )
-                        # For each cell - calculate the idle time for the elevator (the cell grade)
-                        fetch_time_matrix[h][w][d] = item_unloaded_to_io_time
-
-
-
-            relevant_times = np.multiply(relevant_locations, fetch_time_matrix)
+            relevant_times = np.multiply(relevant_locations, aisle_scores)
             relevant_times[relevant_times == 0.0] = np.inf
-            # for s in aisle.shuttles:
-            #     relevant_times[:][s.floor] += max(
-            #         s.current_tasks_completion_time
-            #     )
+            next_time_elevator_is_free = find_max_element(P)
+            available_time_range = curr_time - next_time_elevator_is_free
+            relevant_times += available_time_range
+            #i = check_fetching(relevant_times)  # i is an (i,j,k) index
+            i = None
+            # Choose the cell on the lowest floor, to ensure minimal idle time
+            for s in aisle.shuttles:
+                # Calculate the idle time of the shuttle, according to the shuttle's last mission
+                relevant_times[:][s.floor] += s.current_tasks_completion_time 
+                # If a cell provides idle time for the shuttle (and not for the elevator)
+                if np.any(relevant_times[:][s.floor] <= 0.0):
+                    i = check_fetching(relevant_times[:][s.floor])
+                    i = list(i)
+                    i.insert(0, s.floor)
+                    i = tuple(i)
+                    break
+            # If there is necessarily idle time for the elevator
+            if i == None:
+                i = check_fetching(relevant_times)
             
-            # available_time_range = curr_time - next_time_elevator_is_free
-            # relevant_times += available_time_range
-            # relevant_times -= next_time_elevator_is_free
-            i = check_fetching(relevant_times)  # i is an (i,j,k) index
             elevator_time_to_floor = elevator_vertical_move_time * i[0]
             elevator_arrival_to_floor_time = (
                 next_time_elevator_is_free + elevator_time_to_floor
@@ -129,7 +92,8 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
             time_until_shuttle_and_elevator_meet = max(
                 elevator_arrival_to_floor_time, shuttle_fetch_time
             )
-
+            #print(int(shuttle_fetch_time))
+            #print(type(int(shuttle_fetch_time)))
             item_unloaded_to_io_time = (
                 time_until_shuttle_and_elevator_meet
                 + shuttle_unload_time
@@ -141,12 +105,12 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
             Event(
                 item_unloaded_to_io_time, item, aisle.shuttles[i[0]], i
             )
+            aisle.shuttles[i[0]].current_tasks_completion_time = time_until_shuttle_and_elevator_meet + shuttle_unload_time
             log(
                 curr_time,
                 f"Shuttle #{i[0]} will bring item {int(item)} from {i} at {parser_simulation_time(int(shuttle_fetch_time))}.",
             )
             aisle.shuttles[i[0]].carrying = item
-            aisle.shuttles[i[0]].current_tasks_completion_time = time_until_shuttle_and_elevator_meet + shuttle_unload_time
             request[item] -= 1
             if request[item] == 0:
                 request.pop(item)
@@ -176,15 +140,16 @@ if __name__ == "__main__":
         print(sum(request.values()))
         aisle = Aisle()
         # Start the storage process:
+        
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
         # print("aisle.storage")
         # print(aisle.storage)
         # For the fetching process:
         # storage_copy = aisle.storage.copy()
-        aisle_scores = aisle.cell_travel_times_array
+        aisle_scores = aisle.calculate_travel_times_by_cell()[0]
         curr_time = SIMULATION_START_TIME
         events_list = []
-        print("Starting to handle a new request") # TODO: Replace with log function
+        print("Starting to handle a new request")
         print(request)
         # Creating First events
         event_generator(aisle, curr_time, request)
@@ -192,7 +157,7 @@ if __name__ == "__main__":
         curr_time = event.time
         while P:
             log(
-                int(curr_time),
+                curr_time,
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
             event.shuttle.carrying = None
