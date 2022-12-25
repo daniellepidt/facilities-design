@@ -34,10 +34,10 @@ def check_fetching(relevant_times: np.ndarray) -> tuple[int]:
     """
     if np.any(relevant_times <= 0.0):
         relevant_times[relevant_times > 0.0] = np.nan
-        # חישוב מדד זמן בטלה לשאטל
+        # Calculate Shuttles' idle time
         return np.unravel_index(np.nanargmax(relevant_times), relevant_times.shape)
     else:
-        # חישוב מדד זמן בטלה למעלית
+        # Calculate Elevator's idle time
         return np.unravel_index(np.argmin(relevant_times), relevant_times.shape)
 
 # For generating fetching events - returns nothing
