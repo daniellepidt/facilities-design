@@ -160,7 +160,7 @@ if __name__ == "__main__":
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
         # TODO: Create a pickling functionality and create a locations .p file
         # For the fetching process:
-        # Creating First events
+        # Creating 40 events
         event_generator(aisle, curr_time, request, index)
         event = heapq.heappop(P)
         curr_time = event.time
@@ -170,7 +170,7 @@ if __name__ == "__main__":
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
             event.shuttle.carrying = None
-            event_generator(aisle, curr_time, request, index)
+            # event_generator(aisle, curr_time, request, index)
             # print("Continue to next event")
             event = heapq.heappop(P)
             curr_time = event.time
