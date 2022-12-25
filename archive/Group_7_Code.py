@@ -58,9 +58,6 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
         # Building events for every available shuttle
         for key in request.keys():
             relevant_locations[relevant_locations == key] = 1.0
-        # for s in aisle.shuttles:
-        #     if s.carrying:  # The shuttle is not available
-        #         relevant_locations[:][s.floor] = 0.0
         relevant_locations[relevant_locations != 1.0] = 0.0
         """
         If there are any relevant locations = at least one shuttle is 
@@ -104,7 +101,6 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter) -> None:
                 curr_time,
                 f"Shuttle #{i[0]} will bring item {int(item)} from {i} at {parser_simulation_time(shuttle_fetch_time)}.",
             )
-            aisle.shuttles[i[0]].carrying = item
             aisle.shuttles[i[0]].current_tasks_completion_time = time_until_shuttle_and_elevator_meet + shuttle_unload_time
             request[item] -= 1
             if request[item] == 0:
@@ -143,8 +139,6 @@ if __name__ == "__main__":
         aisle_scores = aisle.calculate_scores_cells_of_idle_time()[0]
         curr_time = SIMULATION_START_TIME
         events_list = []
-        print("Starting to handle a new request") # TODO: Replace with log function
-        print(request)
         # Creating First events
         event_generator(aisle, curr_time, request)
         event = heapq.heappop(P)
@@ -154,7 +148,6 @@ if __name__ == "__main__":
                 curr_time,
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
-            event.shuttle.carrying = None
             event_generator(aisle, curr_time, request)
             # print("Continue to next event")
             event = heapq.heappop(P)

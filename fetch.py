@@ -5,13 +5,11 @@ from a relevant pickle file.
 
 import pickle
 from numpy.random import choice, seed
-from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME, create_dir_if_missing
+from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME
 from collections import Counter
 from logger import log
-from classes import Request
 
 
-# TODO: Create a common functionality for getting the pickle file and use it in both functions.
 def get_items_list_sorted_by_probability(file_name="prob_list.p") -> list[list]:
     """
     Extracts from the pickle file the pairs of items & probabilities,
@@ -53,9 +51,7 @@ def generate_random_requests(
     log_opening = f"Created request #{seed_value // 10} with the following {sum(counts_by_item.values())} items:"
     log(SIMULATION_START_TIME, log_opening)
     log(SIMULATION_START_TIME, counts_by_item)
-    # filepath = "./generated_requests/"
     try:
-        # create_dir_if_missing(filepath)
         filename = f"request_{seed_value // 10}.p"
         with open(filename, "wb") as file:
             pickle.dump(random_requests, file)

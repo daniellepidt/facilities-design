@@ -6,57 +6,42 @@ from globals import (
     ITEMS_IN_FETCH,
     SIMULATION_START_TIME,
     PrivateError,
-    P,
-    create_dir_if_missing,
+    P
 )
 from logger import log
-
-
-# class EventType(Enum):
-#     ELEVATOR_MOVEMENT = 1
-#     SHUTTLE_FETCH = 2
-#     ELEVATOR_LOAD = 3
-#     ELEVATOR_UNLOAD = 4
-
-#     def __repr__(self):
-#         return self.name.lower().replace("_", " ")
-
-
-class Item:
-    def __init__(self, type):
-        self.id = uuid.uuid4().hex  # Create a unique identifier for this item.
-
-
-class Request:
-    def __init__(
-        self,
-        item,
-    ):
-        self.item = item
-        self.supply_time = None
-
-    def __repr__(self):
-        return f"Request for #{self.item}"
-
-    def supplied(self, time):
-        self.supply_time = time
-        print()
 
 
 class Event:
     def __init__(self, time, item=None, shuttle=None, location=None):
         self.time = time  # event time
         self.item = item  # The Item related to the event
-        self.shuttle = shuttle
         self.location = location  # The location from which the item was fetched
-        # self.P = P  # Heap used for events
         hq.heappush(P, self)  # add the event to the events list
-
-    # def heappush(self, P):
-    #     hq.heappush(P, self)  # add the event to the events list
 
     def __lt__(self, other_event):
         return self.time < other_event.time
+
+
+class Elevator:
+    def __init__(self, vertical_move_time=2, unload_time=3):
+        self.vertical_move_time = vertical_move_time
+        self.unload_time = unload_time
+
+    def __repr__(self):
+        return "Elevator"
+
+
+class Shuttle:
+    def __init__(self, floor, horizontal_move_time=2, load_time=5, unload_time=5):
+        self.floor = floor
+        self.horizontal_move_time = horizontal_move_time
+        self.load_time = load_time
+        self.unload_time = unload_time
+        self.position = 0
+        self.current_tasks_completion_time = 0
+
+    def __repr__(self):
+        return f"Shuttle {self.floor + 1}"
 
 
 class Aisle:
@@ -64,10 +49,9 @@ class Aisle:
         self.height = height
         self.width = width
         self.depth = depth
-        # Create an array of 'height' floors, with 'width' number of cells per 'depth'.
-        self.storage = np.zeros((height, depth, width))
-        self.storage_dict = {}
-        # Only pass in elevation settings if any were added
+        self.storage = np.zeros(
+            (height, depth, width)
+        )  # Create an array of 'height' floors, with 'width' number of cells per 'depth'.
         self.elevator = Elevator()
         self.shuttles = [Shuttle(floor) for floor in range(height)]
         (
@@ -150,9 +134,8 @@ class Aisle:
         (each time - store all the remaining units of the item with the highest probability).
         """
         height, width, depth = self.height, self.width, self.depth
-        aisle_storage = self.storage.copy()
+        self.storage = self.storage.copy()
         items_for_storage_for_monitoring = items_for_storage.copy()
-        item_storage_by_location_dict = {}
 
         # Make sure the request is reasonable
         total_num_units = sum(items_for_storage_for_monitoring.values())
@@ -194,14 +177,9 @@ class Aisle:
             current_cell = available_cells_sorted.pop(0)
 
             # Store
-            aisle_storage[current_cell[0]][current_cell[1]][
+            self.storage[current_cell[0]][current_cell[1]][
                 current_cell[2]
             ] = current_item
-
-            if not current_item in item_storage_by_location_dict:
-                item_storage_by_location_dict[current_item] = [current_cell]
-            else:
-                item_storage_by_location_dict[current_item].append(current_cell)
 
             # Update number of units to be stored for this item
             items_for_storage[current_item] -= 1
@@ -233,27 +211,9 @@ class Aisle:
                     # Select the next cell to store in (the available cell with the highest score)
                     current_cell = available_cells_sorted.pop(0)
                     # Store
-                    aisle_storage[current_cell[0]][current_cell[1]][
+                    self.storage[current_cell[0]][current_cell[1]][
                         current_cell[2]
                     ] = current_item
-                    if not current_item in item_storage_by_location_dict:
-                        item_storage_by_location_dict[current_item] = [current_cell]
-                    else:
-                        item_storage_by_location_dict[current_item].append(current_cell)
-
-                # Make sure we placed all the units for this item
-                if items_for_storage_for_monitoring[current_item] < len(
-                    item_storage_by_location_dict[current_item]
-                ):
-                    raise PrivateError(
-                        f"Logical Error: Item {current_item} - not all the units stored"
-                    )
-                elif items_for_storage_for_monitoring[current_item] > len(
-                    item_storage_by_location_dict[current_item]
-                ):
-                    raise PrivateError(
-                        f"Logical Error: Item {current_item} - too many units stored"
-                    )
 
         # Make sure the storing is reasonable:
         # The number of available cells and the number of required units to store
@@ -262,16 +222,13 @@ class Aisle:
         if total_num_units + num_available_units != height * width * depth:
             raise PrivateError("Wrong storing")
 
-        # Update the storage
-        self.storage = aisle_storage
-        self.storage_dict = item_storage_by_location_dict
         log(simulation_time, f"Completed loading {total_num_units} items into {self}.")
         try:
             filename = f"Group_7_item_position.p"
             with open(filename, "wb") as file:
                 import pickle
 
-                pickle.dump(aisle_storage, file)
+                pickle.dump(self.storage, file)
             log(
                 SIMULATION_START_TIME,
                 f"Storage locations Pickle file saved @ {filename}.",
@@ -281,36 +238,3 @@ class Aisle:
                 SIMULATION_START_TIME,
                 f"Failed to save storage locations Pickle file.\nError: {e}",
             )
-
-
-class Elevator:
-    def __init__(self, vertical_move_time=2, unload_time=3):
-        self.vertical_move_time = vertical_move_time
-        self.unload_time = unload_time
-        self.floor = 0  # Start on the groud floor
-        self.carrying = None
-        # self.tasks = None
-
-    # def set_tasks (self, tasks):
-    #     self.tasks = tasks
-
-    def __repr__(self):
-        return "Elevator"
-
-
-class Shuttle:
-    def __init__(self, floor, horizontal_move_time=2, load_time=5, unload_time=5):
-        self.floor = floor
-        self.horizontal_move_time = horizontal_move_time
-        self.load_time = load_time
-        self.unload_time = unload_time
-        self.position = 0
-        self.carrying = None
-        # self.tasks = None
-        self.current_tasks_completion_time = 0
-
-    def __repr__(self):
-        return f"Shuttle {self.floor + 1}"
-
-    # def set_tasks (self, tasks):
-    #     self.tasks = tasks

@@ -28,7 +28,7 @@ def log(seconds_from_start: int, log_data=""):
 def create_log_file(creation_time=SIMULATION_START_TIME) -> str:
     """
     Create a log file which will be used for logging all actions performed in this simulation.
-    
+
     The function returns the timestamp under which the log file was saved,
     so it can be reused with the results CSV file.
 
@@ -40,7 +40,7 @@ def create_log_file(creation_time=SIMULATION_START_TIME) -> str:
     except OSError:
         pass
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    filename = f'logs/{timestamp}_log.log'
+    filename = f"logs/{timestamp}_log.log"
     logging.basicConfig(filename=filename, encoding="utf-8", level=logging.DEBUG)
     log(creation_time, f"Created log file successfully with filename: {filename}")
     return timestamp

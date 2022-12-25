@@ -1,8 +1,10 @@
 from logger import log
-from globals import create_dir_if_missing
 import pandas as pd
 
-def create_retrival_pickle_file(timestamp: float, request_number: int, data: list) -> None:
+
+def create_retrival_pickle_file(
+    timestamp: float, request_number: int, data: list
+) -> None:
     """
     Use the request number and data in order to create a
     pickle file containing a list of lists with the results
@@ -11,11 +13,15 @@ def create_retrival_pickle_file(timestamp: float, request_number: int, data: lis
 
     All files will be saved under the retrival_results directory
     """
-    log(timestamp, f"Attempting to save the retrival results for request #{request_number}...")
+    log(
+        timestamp,
+        f"Attempting to save the retrival results for request #{request_number}...",
+    )
     try:
         filename = f"Group_7_retrival_{request_number}.p"
         with open(filename, "wb") as file:
             import pickle
+
             pickle.dump(data, file)
         log(timestamp, f"Retrival results Pickle file saved @ {filename}.")
     except Exception as e:

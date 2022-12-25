@@ -21,7 +21,9 @@ def get_items_for_storage(file_name="storage_list.p") -> Counter:
     # Transform into a dictionary by the format of
     # {item: amount_requested}:
     items_for_storage = {item[0]: item[1] for item in storage_list}
-    log_opening = f"Got the following {sum(items_for_storage.values())} items for storage:"
+    log_opening = (
+        f"Got the following {sum(items_for_storage.values())} items for storage:"
+    )
     log(SIMULATION_START_TIME, log_opening)
     log(SIMULATION_START_TIME, items_for_storage)
     return Counter(items_for_storage)

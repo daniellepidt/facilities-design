@@ -145,7 +145,6 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
                 curr_time,
                 f"Shuttle #{i[0]} will bring item {int(item)} from {i} at {parser_simulation_time(int(shuttle_fetch_time))}.",
             )
-            aisle.shuttles[i[0]].carrying = item
             aisle.shuttles[i[0]].current_tasks_completion_time = (
                 time_until_shuttle_and_elevator_meet + shuttle_unload_time
             )
@@ -186,8 +185,6 @@ if __name__ == "__main__":
         aisle = Aisle()
         # Start the storage process:
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
-        # TODO: Create a pickling functionality and create a locations .p file
-        # For the fetching process:
         event_generator(aisle, curr_time, request, index)  # Creating 40 events
         event = heapq.heappop(P)
         curr_time = event.time
@@ -196,7 +193,6 @@ if __name__ == "__main__":
                 int(curr_time),
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
-            event.shuttle.carrying = None
             event = heapq.heappop(P)
             curr_time = event.time
         request_c_max.append(curr_time)
