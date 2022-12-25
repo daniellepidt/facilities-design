@@ -25,28 +25,28 @@ def find_max_element(heap) -> float:
 
 
 # For event_generator - returns index
-def check_fetching(relevant_times: np.ndarray) -> tuple[int]:
+#def check_fetching(relevant_times: np.ndarray) -> tuple[int]:
     """
     A function which receives the relevant_times Numpy array,
     and return the index of the the best cell from which to
     fetch an item.
     The index returns as a tuple of (i,j,k).
     """
-    if np.any(relevant_times <= 0.0):
-        relevant_times[relevant_times > 0.0] = np.nan
-        # חישוב מדד זמן בטלה לשאטל
-        return np.unravel_index(np.nanargmax(relevant_times), relevant_times.shape)
-    else:
+#    if np.any(relevant_times <= 0.0):
+#        relevant_times[relevant_times > 0.0] = np.nan
+#        # חישוב מדד זמן בטלה לשאטל
+#        return np.unravel_index(np.nanargmax(relevant_times), relevant_times.shape)
+#    else:
         # חישוב מדד זמן בטלה למעלית
-        return np.unravel_index(np.argmin(relevant_times), relevant_times.shape)
+#        return np.unravel_index(np.argmin(relevant_times), relevant_times.shape)
 
 # For generating fetching events - returns nothing
 def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_index: int) -> None:
     """
     Generates events
     """
-    shuttle_load_time = aisle.shuttles[0].load_time
-    shuttle_unload_time = aisle.shuttles[0].unload_time
+    # shuttle_load_time = aisle.shuttles[0].load_time
+    # shuttle_unload_time = aisle.shuttles[0].unload_time
     # shuttle_horizontal_move_time = aisle.shuttles[0].horizontal_move_time
     elevator_unload_time = aisle.elevator.unload_time
     elevator_vertical_move_time = aisle.elevator.vertical_move_time
@@ -61,11 +61,11 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
             relevant_times = np.multiply(relevant_locations, aisle.scores_cells_of_idle_time_array)
             relevant_times[relevant_times == 0.0] = np.inf
             next_time_elevator_is_free = find_max_element(P)
-            #available_time_range = curr_time - next_time_elevator_is_free
-            available_time_range = - next_time_elevator_is_free
-            relevant_times += available_time_range
+            # available_time_range = curr_time - next_time_elevator_is_free
+            # relevant_times += available_time_range
+            relevant_times -= next_time_elevator_is_free
             #i = check_fetching(relevant_times)  # i is an (i,j,k) index
-            i = None
+            i = None # i is an (i,j,k) index
             # Choose the cell on the lowest floor, to ensure minimal idle time
             for s in aisle.shuttles:
                 # Calculate the idle time of the shuttle, according to the shuttle's last mission
@@ -90,7 +90,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
             shuttle_fetch_time = (
                 aisle.shuttles[i[0]].current_tasks_completion_time
                 + (2 * aisle.shuttles[i[0]].horizontal_move_time * i[1])
-                + shuttle_load_time
+                + aisle.shuttles[i[0]].load_time
             )
             time_until_shuttle_and_elevator_meet = max(
                 elevator_arrival_to_floor_time, shuttle_fetch_time
@@ -98,7 +98,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
 
             item_unloaded_to_io_time = (
                 time_until_shuttle_and_elevator_meet
-                + shuttle_unload_time
+                + aisle.shuttles[i[0]].unload_time
                 + elevator_time_to_floor
                 + elevator_unload_time
             )
@@ -120,7 +120,7 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
             )
             aisle.shuttles[i[0]].carrying = item
             aisle.shuttles[i[0]].current_tasks_completion_time = (
-                time_until_shuttle_and_elevator_meet + shuttle_unload_time
+                time_until_shuttle_and_elevator_meet + aisle.shuttles[i[0]].unload_time
             )
             request[item] -= 1
             if request[item] == 0:
