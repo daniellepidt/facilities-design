@@ -5,7 +5,7 @@ from a relevant pickle file.
 
 import pickle
 from numpy.random import choice, seed
-from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME
+from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME, create_dir_if_missing
 from collections import Counter
 from logger import log
 from classes import Request
@@ -53,13 +53,14 @@ def generate_random_requests(
     log_opening = f"Created request #{seed_value // 10} with the following {sum(counts_by_item.values())} items:"
     log(SIMULATION_START_TIME, log_opening)
     log(SIMULATION_START_TIME, counts_by_item)
-    filepath = "./generated_requests/"
+    # filepath = "./generated_requests/"
     try:
-        filename = f"{filepath}request_{seed_value // 10}.p"
+        # create_dir_if_missing(filepath)
+        filename = f"request_{seed_value // 10}.p"
         with open(filename, "wb") as file:
             pickle.dump(random_requests, file)
         log(SIMULATION_START_TIME, f"Request Pickle file saved @ {filename}.")
-    except:
-        log(SIMULATION_START_TIME, "Failed to save request Pickle file.")
+    except Exception as e:
+        log(SIMULATION_START_TIME, f"Failed to save request Pickle file.\nError: {e}")
 
     return counts_by_item

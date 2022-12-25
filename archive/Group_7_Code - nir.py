@@ -6,7 +6,7 @@ from classes import Aisle, Event
 from collections import Counter
 import numpy as np
 import heapq
-from output import create_results_csv
+from output import create_unified_results_csv
 
 
 def find_max_element(heap) -> float:
@@ -39,7 +39,6 @@ def check_fetching(relevant_times: np.ndarray) -> tuple[int]:
     else:
         # חישוב מדד זמן בטלה למעלית
         return np.unravel_index(np.argmin(relevant_times), relevant_times.shape)
-
 
 # For generating fetching events - returns nothing
 def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_index: int) -> None:
@@ -125,6 +124,12 @@ def event_generator(aisle: Aisle, curr_time: float, request: Counter, request_in
                 + elevator_unload_time
             )
             item = aisle.storage[i]
+            request_metrics.append([
+                item,
+                [i[0], i[1], i[2]],
+                time_until_shuttle_and_elevator_meet + shuttle_unload_time,
+                item_unloaded_to_io_time
+            ])
             simulation_metrics.append({
                 "request_index": request_index,
                 "height": i[0],
@@ -170,10 +175,11 @@ if __name__ == "__main__":
 
     # Create metrics:
     request_c_max = []
-    simulation_metrics = []
+    simulation_metrics = []  # Total simulation metrics for data analysis.
 
     # Start of the simulation
     for index, request in enumerate(REQUESTS):
+        request_metrics = []  # Metrics for this request only, and for outputing Pickle file.
         curr_time = SIMULATION_START_TIME  # = 0
         log(curr_time, f"Handling request #{index}:")
         log(curr_time, request)
@@ -182,8 +188,7 @@ if __name__ == "__main__":
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
         # TODO: Create a pickling functionality and create a locations .p file
         # For the fetching process:
-        # Creating First events
-        event_generator(aisle, curr_time, request, index)
+        event_generator(aisle, curr_time, request, index)  # Creating 40 events
         event = heapq.heappop(P)
         curr_time = event.time
         while P:
@@ -192,15 +197,12 @@ if __name__ == "__main__":
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
             event.shuttle.carrying = None
-            event_generator(aisle, curr_time, request, index)
-            # print("Continue to next event")
             event = heapq.heappop(P)
             curr_time = event.time
         request_c_max.append(curr_time)
+        create_retrival_pickle_file(curr_time, index, request_metrics)
         log(curr_time, f"Finished a requests round with C_max: {curr_time}")
 log(curr_time, f"Finished all requests rounds with C_max: {request_c_max}")
 
-create_results_csv(timestamp, simulation_metrics)
+create_unified_results_csv(timestamp, simulation_metrics)
 log(curr_time, f"Created results file under: results/{timestamp}_results.csv")
-
-# TODO: Create a pickling functionality which creates the results .p file.

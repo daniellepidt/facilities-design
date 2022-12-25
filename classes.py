@@ -2,7 +2,13 @@ import heapq as hq
 import numpy as np
 import uuid
 from collections import Counter
-from globals import ITEMS_IN_FETCH, SIMULATION_START_TIME, PrivateError, P
+from globals import (
+    ITEMS_IN_FETCH,
+    SIMULATION_START_TIME,
+    PrivateError,
+    P,
+    create_dir_if_missing,
+)
 from logger import log
 
 
@@ -154,9 +160,11 @@ class Aisle:
             raise PrivateError(
                 f"Number of items for storage is greater then the amount of storage available in the {self}."
             )
-        
+
         # Get the storing requests, and the cell scores
-        available_cells_sorted = [cell[0] for cell in self.scores_cells_of_idle_time_dict]
+        available_cells_sorted = [
+            cell[0] for cell in self.scores_cells_of_idle_time_dict
+        ]
 
         # Get the probabilities for each item, and calculate expectations
         sorted_items_expectation_dict = {}
@@ -258,9 +266,21 @@ class Aisle:
         self.storage = aisle_storage
         self.storage_dict = item_storage_by_location_dict
         log(simulation_time, f"Completed loading {total_num_units} items into {self}.")
-        # TODO: Create logic to output a pickle file with the selected
-        # storage decision.
-        # TODO: Add GUI showing the storage decision.
+        try:
+            filename = f"Group_7_item_position.p"
+            with open(filename, "wb") as file:
+                import pickle
+
+                pickle.dump(aisle_storage, file)
+            log(
+                SIMULATION_START_TIME,
+                f"Storage locations Pickle file saved @ {filename}.",
+            )
+        except Exception as e:
+            log(
+                SIMULATION_START_TIME,
+                f"Failed to save storage locations Pickle file.\nError: {e}",
+            )
 
 
 class Elevator:
