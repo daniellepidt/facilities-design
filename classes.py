@@ -37,7 +37,6 @@ class Shuttle:
         self.horizontal_move_time = horizontal_move_time
         self.load_time = load_time
         self.unload_time = unload_time
-        self.position = 0
         self.current_tasks_completion_time = 0
 
     def __repr__(self):
