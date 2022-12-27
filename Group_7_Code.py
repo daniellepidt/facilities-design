@@ -2,6 +2,7 @@ from globals import SIMULATION_START_TIME, P
 from logger import create_log_file, log, parser_simulation_time
 from storage import get_items_for_storage
 from fetch import get_items_list_sorted_by_probability, generate_random_requests
+import pickle
 from classes import Aisle, Event
 from collections import Counter
 import numpy as np
@@ -141,13 +142,21 @@ if __name__ == "__main__":
     ITEMS_FOR_STORAGE = get_items_for_storage()
     SORTED_ITEMS_PROBABILITIES_LIST = get_items_list_sorted_by_probability()
 
-    # Create the global requests:
-    REQUESTS = [
-        generate_random_requests(
-            ITEMS_FOR_STORAGE, SORTED_ITEMS_PROBABILITIES_LIST, seed
-        )
-        for seed in range(0, 100, 10)
-    ]  # Create a list of 10 groups of 40 requests, each with a different seed.
+    # Code for generating test requets:
+    # REQUESTS = [
+    #     generate_random_requests(
+    #         ITEMS_FOR_STORAGE, SORTED_ITEMS_PROBABILITIES_LIST, seed
+    #     )
+    #     for seed in range(0, 100, 10)
+    # ]  # Create a list of 10 groups of 40 requests, each with a different seed.
+    
+    # Code for getting the actual requests for analysis:
+    REQUESTS = []
+    for i in range(1,11):
+        file_name = f"./requests/request_items_{i}.p"
+        with open(file_name, "rb") as file:
+            request_items = pickle.load(file)
+        REQUESTS.append(Counter(request_items))
     log(SIMULATION_START_TIME, "All requests were created.")
 
     # Create metrics:
@@ -166,15 +175,13 @@ if __name__ == "__main__":
         # Start the storage process:
         aisle.store_items(get_items_for_storage(), SORTED_ITEMS_PROBABILITIES_LIST)
         event_generator(aisle, curr_time, request, index)  # Creating 40 events
-        event = heapq.heappop(P)
-        curr_time = event.time
         while P:
+            event = heapq.heappop(P)
+            curr_time = event.time
             log(
                 int(curr_time),
                 f"The elevator unloaded item {int(event.item)} from {event.location}. {sum(request.values())} items left for collection.",
             )
-            event = heapq.heappop(P)
-            curr_time = event.time
         request_c_max.append(curr_time)
         create_retrival_pickle_file(curr_time, index, request_metrics)
         log(curr_time, f"Finished a requests round with C_max: {curr_time}")
